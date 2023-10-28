@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { Loader2 } from "lucide-react";
@@ -7,6 +8,8 @@ import useDocumentCategory from "@/hooks/useDocumentCategory";
 import useFileUpload from "@/hooks/useFileUpload";
 import { useFormStatus } from "react-dom";
 import { pdfjs } from 'react-pdf';
+import { chunkText, parseDocument } from "@/app/parser/documentParser";
+import { maxHeaderSize } from "http";
 
 // Set up the worker (required by pdfjsLib)
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -38,8 +41,21 @@ const SubmitButton = () => {
                 }
             }
         }
+        const textChunks = chunkText(textContentString,maxHeaderSize); //Need to find out what the max chunk size should be
 
-        toast.success(textContentString);
+        const parsedData = await parseDocument(textChunks);
+        const dt = [];
+
+        for (const data of parsedData) {
+            dt.push(data);
+
+        };
+        
+        toast(JSON.stringify(dt),{position: "bottom-right"});
+        toast.success("Document parsed successfully!");
+        setLoading(false);
+          
+
 
         setText(textContentString);
       };

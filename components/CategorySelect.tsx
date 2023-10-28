@@ -21,24 +21,29 @@ import { Label } from "./ui/label"
 import toast from "react-hot-toast"
 import useDocumentCategory from "@/hooks/useDocumentCategory"
 
-const documentCategories = [
+export const documentCategories = [
   {
     value: "operating-agreement",
     label: "Signed Operating Agreement",
+    description: "An Operating Agreement is a legal document outlining the ownership and operating procedures of an LLC. It's signed by all members of the LLC and may cover details like the business' structure, member roles, and financial management. To identify this document, look for headings like 'Operating Agreement', signatures from all members, and sections detailing member duties and capital contributions."
   },
   {
     value: "certificate-of-organization",
     label: "Certificate of Organization",
+    description: "A Certificate of Organization is a document filed with the Secretary of State to officially form an LLC. It contains essential information such as the name of the LLC, its purpose, and the name and address of the registered agent. The document title 'Certificate of Organization' should appear at the top, and it should have a filing stamp or acknowledgment from the Secretary of State."
   },
   {
     value: "articles-of-organization",
     label: "Articles of Organization",
+    description: "Articles of Organization are legal documents filed with the Secretary of State to establish an LLC's existence. They include the business name, purpose, duration, and the name and address of the registered agent. Look for a header mentioning 'Articles of Organization', and check for essential details like the business name and the signature of the organizer or authorized representative."
   },
   {
     value: "articles-of-incorporation",
     label: "Articles of Incorporation",
+    description: "Articles of Incorporation are filed with the Secretary of State to legally form a corporation. They include the corporation’s name, number of shares the corporation is authorized to issue, the address of the initial registered office, and the name of the registered agent. The title 'Articles of Incorporation' should appear at the top, along with signatures of incorporators and possibly a state official's acknowledgment."
   },
 ]
+
 
 const CategorySelect = () => {
     const [open, setOpen] = React.useState(false);
