@@ -1,62 +1,72 @@
-"use client"
-
+"use client";
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import useDocumentCategory from "@/hooks/useDocumentCategory";
 import useFileUpload from "@/hooks/useFileUpload";
-import { parsePdf } from "@/app/actions/actions";
 import { useFormStatus } from "react-dom";
+import { pdfjs } from 'react-pdf';
 
-// const getText = async (data: any) => {
-//     const dataBuffer = await pdf(data);
-//     // console.log(data.numpages);
-//     // // number of rendered pages
-//     // console.log(data.numrender);
-//     // // PDF info
-//     // console.log(data.info);
-//     // // PDF metadata
-//     // console.log(data.metadata); 
-//     // // PDF.js version
-//     // // check https://mozilla.github.io/pdf.js/getting_started/
-//     // console.log(data.version);
-//     // // PDF text
-//     // console.log(data.text); 
-// }
+// Set up the worker (required by pdfjsLib)
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+    'pdfjs-dist/build/pdf.worker.min.js',
+    import.meta.url,
+  ).toString();
+
+
+
  
-
 const SubmitButton = () => {
     const [loading, setLoading] = useState(false);
+    const [text, setText] = useState('');
     const { pending } = useFormStatus()
 
     const categoryName = useDocumentCategory(state => state.catgeory);
     const file = useFileUpload(state => state.file);
 
-    // reader.readAsArrayBuffer(file);
-    // reader.onload = (event) => {
-    //     const dataBuffer = event.target?.result;
-    //     if (dataBuffer) {
-    //         parsePdf(dataBuffer).then((data) => {
-    //             setLoading(false);
-    //             console.log(data);
-    //         });
-    //     }
-    // };
+    const extractText = async (fileUrl: string) => {
+        const pdf = await pdfjs.getDocument(fileUrl).promise;
+        let textContentString = '';
+
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+            const page = await pdf.getPage(pageNum);
+            const textContent = await page.getTextContent();
+            for (const item of textContent.items) {
+                if ('str' in item) {
+                    textContentString += item.str;
+                }
+            }
+        }
+
+        toast.success(textContentString);
+
+        setText(textContentString);
+      };
+
 
 
     const handleClick: () => void = () => {
-        setLoading(true);
-        const reader = new FileReader();
-        if (file) {
-            const formData = new FormData();
-            reader.readAsArrayBuffer(file);
-            formData.append("file", file);
-
-            parsePdf(formData).then((data) => {
-                toast.success("Document parsed successfully!");
-            });
+        if (pending) {
+            toast.error("Please wait for the previous document to finish parsing")
+            return;
         }
+        if (!categoryName) {
+            toast.error("Please select a category")
+            return;
+        }
+        if (!file) {
+            toast.error("Please upload a document")
+            return;
+        }
+        setLoading(true);
+        const fileUrl = URL.createObjectURL(file);
+        extractText(fileUrl).then((data) => {
+            setLoading(false);
+        }).catch((err) => { 
+            toast.error(`Error while parsing document, please try again`);
+            toast.error(err.message);
+        }); 
     };
     
     return (
@@ -66,10 +76,8 @@ const SubmitButton = () => {
                 <Button disabled> 
                     <Loader2 className="mr-2 h-4 w-4 animate-spin"/> Parsing
                 </Button> :
-                <form action={handleClick}>
-                    <Button type="submit" id="upload"> Parse Document</Button> 
-                </form>
-            }
+                <Button onClick={handleClick}> Parse Document</Button> 
+}
         </div>
     );
 }

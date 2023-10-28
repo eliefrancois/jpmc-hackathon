@@ -6,6 +6,8 @@ import useFileUpload from "@/hooks/useFileUpload"
 import React from "react"
 import toast from "react-hot-toast"
 
+// Try Making State for File upload type FormData and control changes in state manager?
+
 const FileUpload = () => {
 
     const updateFile = useFileUpload(state => state.updateFile);
