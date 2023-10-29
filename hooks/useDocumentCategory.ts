@@ -1,15 +1,15 @@
 import { create } from 'zustand';
 
 interface DocumentCategoryStore {
-    catgeory: string | null;
+    catgeory: string;
     updateCategory: (newCategory: string) => void;
     resetCategory: () => void;
 }
 
 const useDocumentCategory = create<DocumentCategoryStore>((set) => ({
-  catgeory: null,
+  catgeory: '',
   updateCategory: (newCategory: string) => set(() => ({ catgeory: newCategory })),
-  resetCategory: () => set(() => ({ catgeory: null })),
+  resetCategory: () => set(() => ({ catgeory: '' })),
 }));
 
 export default useDocumentCategory;

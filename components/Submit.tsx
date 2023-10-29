@@ -10,6 +10,7 @@ import { useFormStatus } from "react-dom";
 import { pdfjs } from 'react-pdf';
 import { chunkText, parseDocument } from "@/app/parser/documentParser";
 import { maxHeaderSize } from "http";
+import { useParsedDataStore } from "@/hooks/useParsedData";
 
 // Set up the worker (required by pdfjsLib)
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -23,10 +24,11 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 const SubmitButton = () => {
     const [loading, setLoading] = useState(false);
     const [text, setText] = useState('');
-    const { pending } = useFormStatus()
+    // const { pending } = useFormStatus()
 
     const categoryName = useDocumentCategory(state => state.catgeory);
     const file = useFileUpload(state => state.file);
+    const updateParsedData = useParsedDataStore(state => state.setParsedData);
 
     const extractText = async (fileUrl: string) => {
         const pdf = await pdfjs.getDocument(fileUrl).promise;
@@ -41,17 +43,12 @@ const SubmitButton = () => {
                 }
             }
         }
-        const textChunks = chunkText(textContentString,maxHeaderSize); //Need to find out what the max chunk size should be
+        const textChunks = chunkText(textContentString,2000); //Need to find out what the max chunk size should be
 
         const parsedData = await parseDocument(textChunks);
-        const dt = [];
-
-        for (const data of parsedData) {
-            dt.push(data);
-
-        };
         
-        toast(JSON.stringify(dt),{position: "bottom-right"});
+        updateParsedData(parsedData);
+        toast(JSON.stringify(parsedData ),{position: "bottom-right"});
         toast.success("Document parsed successfully!");
         setLoading(false);
           
@@ -63,10 +60,10 @@ const SubmitButton = () => {
 
 
     const handleClick: () => void = () => {
-        if (pending) {
-            toast.error("Please wait for the previous document to finish parsing")
-            return;
-        }
+        // if (pending) {
+        //     toast.error("Please wait for the previous document to finish parsing")
+        //     return;
+        // }
         if (!categoryName) {
             toast.error("Please select a category")
             return;
