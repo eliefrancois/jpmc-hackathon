@@ -2,27 +2,28 @@ import React, { useCallback, useEffect } from 'react';
 import { Checkbox } from "./ui/checkbox";
 import { documentCategories } from './CategorySelect';
 import { useFieldSelectionStore } from '@/hooks/useFieldCheckbox';
-import { Field } from 'llmparser';
+import { Category, Field } from 'llmparser';
 import toast from 'react-hot-toast';
+import useDocumentCategory from '@/hooks/useDocumentCategory';
 
-const FieldCheckbox = ({ category }: { category: string }) => {
+const FieldCheckbox = ({ category }: { category: Category }) => {
   // Find the selected category
-  const selectedCategory = documentCategories.find(cat => cat.value === category);
   const toggleSelection = useFieldSelectionStore((state) => state.toggleFieldSelection);
+  console.log(category);
 
 
   const handleCheckboxChange = useCallback((field: Field) => {
-    toast.success(`Selected ${field.name}`);
     toggleSelection(field);
+    toast.success(`Selected ${field.name}`);
   }, [toggleSelection]);
 
 
   return (
     <div className="flex flex-col items-center mt-10">
-      {selectedCategory ? (
+      {category.fields ? (
         <div>
           <label>Fields to extract</label>
-          {selectedCategory.fields.map((field, index) => (
+          {category?.fields?.map((field, index) => (
             // console.log(field),
             <div key={index} className="mb-2">
               <Checkbox id={field.name}

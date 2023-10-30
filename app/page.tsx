@@ -5,6 +5,7 @@ import DataTable from "@/components/DataTable";
 import FieldCheckbox from "@/components/FieldCheckBox";
 import FileUpload from "@/components/FileUpload";
 import SubmitButton from "@/components/Submit";
+import { TableDemo } from "@/components/Table";
 import useDocumentCategory from "@/hooks/useDocumentCategory";
 import { Separator } from "@radix-ui/react-separator";
 
@@ -21,6 +22,7 @@ export default function Home() {
         <FileUpload/>
         <SubmitButton/>
         <Separator orientation="horizontal" className="my-10"/>
+        {/* <TableDemo/> */}
         <DataTable/>
 
     </div>

@@ -35,7 +35,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
+import { ParsedData, useParsedDataStore } from "@/hooks/useParsedData";
+import { useEffect } from "react";
 
 export type Payment = {
   id: string;
@@ -49,41 +50,69 @@ export type Document = {
   fileName: string;
 };
 
+type FieldInfo = {
+  value: string;
+  source: string;
+  confidence: number;
+  type: string; // You might want to replace 'string' with a more specific type if possible, e.g., 'string' | 'number' | 'date'.
+};
 
-const data: Payment[] = [
+type Fields = {
+  [key: string]: FieldInfo;
+};
+
+type parsedData = {
+  type: string;
+  confidence: number;
+  source: string;
+  fields: Fields;
+};
+
+// Usage:
+const data: parsedData[] = [
   {
-    id: "m5gr84i9",
-    amount: 316,
-    status: "success",
-    email: "ken99@yahoo.com",
-  },
-  {
-    id: "3u1reuv4",
-    amount: 242,
-    status: "success",
-    email: "Abe45@gmail.com",
-  },
-  {
-    id: "derv1ws0",
-    amount: 837,
-    status: "processing",
-    email: "Monserrat44@gmail.com",
-  },
-  {
-    id: "5kma53ae",
-    amount: 874,
-    status: "success",
-    email: "Silas22@gmail.com",
-  },
-  {
-    id: "bhqecj4p",
-    amount: 721,
-    status: "failed",
-    email: "carmella@hotmail.com",
+    type: "Head of Community",
+    confidence: 0.9,
+    source:
+      "Head of Community, lead our efforts to build an engaged and passionate community of Notion users and customers.",
+    fields: {
+      "Job Title": {
+        value: "Head of Community",
+        source: "Head of Community",
+        confidence: 1,
+        type: "string",
+      },
+      "Company Name": {
+        value: "Notion",
+        source: "Notion",
+        confidence: 1,
+        type: "string",
+      },
+    },
   },
 ];
 
-export const columns: ColumnDef<Payment>[] = [
+type FieldsEntries = {
+  [key: string]: string | number;
+};
+
+const flattenedData = data.map((item) => {
+  const { fields, ...rest } = item;
+  const fieldsEntries = Object.entries(fields).reduce((acc: FieldsEntries, [key, field]) => {
+    acc[`${key} Value`] = field.value;
+    acc[`${key} Source`] = field.source;
+    acc[`${key} Confidence`] = field.confidence;
+    acc[`${key} Type`] = field.type;
+    return acc;
+  }, {});
+  return { ...rest, ...fieldsEntries };
+});
+
+console.log(flattenedData);
+
+
+
+export const columns: ColumnDef<ParsedData,any>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -104,42 +133,76 @@ export const columns: ColumnDef<Payment>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "status",
-    header: "Status",
+    accessorKey: "type",
+    header: "Document Type",
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("status")}</div>
+      <div className="capitalize">{row.getValue("type")}</div>
     ),
   },
   {
-    accessorKey: "email",
+    accessorKey: "confidence",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Email
+          Document Confidence
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
     },
-    cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
+    cell: ({ row }) => (
+      <div className="lowercase">{row.getValue("confidence")}</div>
+    ),
   },
   {
-    accessorKey: "amount",
-    header: () => <div className="text-right">Amount</div>,
+    accessorFn: (row) => {row.fields} ,  // Changed from accessorKey to id since it's not a direct property of the row data
+    header: "Members",
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("amount"));
-
-      // Format the amount as a dollar amount
-      const formatted = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-      }).format(amount);
-
-      return <div className="text-right font-medium">{formatted}</div>;
+      const field = row.original.fields.Members.value.toString();
+      return <div>{field}</div>;
     },
   },
+  // {
+  //   accessorFn: (row) => {row.fields} ,  // Changed from accessorKey to id since it's not a direct property of the row data
+  //   header: "Effective Date",
+  //   cell: ({ row }) => {
+  //     const field = row.original.fields['Effective Date'].value;
+  //     return <div>{field}</div>;
+  //   },
+  // },
+  {
+    accessorFn: (row) => {row.fields} ,  // Changed from accessorKey to id since it's not a direct property of the row data
+    header: "Capitial Contributions",
+    cell: ({ row }) => {
+      const field = row.original.fields['Capital Contributions'].value.toString();
+      return <div>{field}</div>;
+    },
+  },
+  {
+    accessorFn: (row) => {row.fields} ,  // Changed from accessorKey to id since it's not a direct property of the row data
+    header: "Distribution of P&L",
+    cell: ({ row }) => {
+      const field = row.original.fields['Distribution of Profits and Losses'].value.toString();
+      return <div>{field}</div>;
+    },
+  },
+  // {
+  //   accessorKey: "source",
+  //   header: () => <div className="text-right">Source</div>,
+  //   cell: ({ row }) => {
+  //     const amount = parseFloat(row.getValue("source"));
+
+  //     // Format the amount as a dollar amount
+  //     const formatted = new Intl.NumberFormat("en-US", {
+  //       style: "currency",
+  //       currency: "USD",
+  //     }).format(amount);
+
+  //     return <div className="text-right font-medium">{row.getValue("source")}</div>;
+  //   },
+  // },
   {
     id: "actions",
     enableHiding: false,
@@ -157,9 +220,9 @@ export const columns: ColumnDef<Payment>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(payment.id)}
+              onClick={() => navigator.clipboard.writeText(payment.confidence.toString())}
             >
-              Copy payment ID
+              Copy Confidence ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>View customer</DropdownMenuItem>
@@ -180,8 +243,13 @@ const DataTable = () => {
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
+  // useEffect(() => {
+    
+  // }, []);
+  
+  const parsedData = useParsedDataStore(state => state.parsedData);
   const table = useReactTable({
-    data,
+    data: parsedData,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -199,120 +267,121 @@ const DataTable = () => {
     },
   });
 
+
   return (
     <div className="grid w-full max-w-100 items-center gap-1.5 mx-auto">
-    <div className="w-full">
-      <div className="flex items-center py-4">
-        <Input
-          placeholder="Filter emails..."
-          value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("email")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columns <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                );
-              })}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
+      <div className="w-full">
+        <div className="flex items-center py-4">
+          <Input
+            placeholder="Filter Categories..."
+            value={(table.getColumn("type")?.getFilterValue() as string) ?? ""}
+            onChange={(event) =>
+              table.getColumn("email")?.setFilterValue(event.target.value)
+            }
+            className="max-w-sm"
+          />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="ml-auto">
+                Columns <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {table
+                .getAllColumns()
+                .filter((column) => column.getCanHide())
+                .map((column) => {
                   return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
+                    <DropdownMenuCheckboxItem
+                      key={column.id}
+                      className="capitalize"
+                      checked={column.getIsVisible()}
+                      onCheckedChange={(value) =>
+                        column.toggleVisibility(!!value)
+                      }
+                    >
+                      {column.id}
+                    </DropdownMenuCheckboxItem>
                   );
                 })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    );
+                  })}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </div>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
+        <div className="flex items-center justify-end space-x-2 py-4">
+          <div className="flex-1 text-sm text-muted-foreground">
+            {table.getFilteredSelectedRowModel().rows.length} of{" "}
+            {table.getFilteredRowModel().rows.length} row(s) selected.
+          </div>
+          <div className="space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Next
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
     </div>
   );
 };

@@ -6,11 +6,10 @@ import { Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import useDocumentCategory from "@/hooks/useDocumentCategory";
 import useFileUpload from "@/hooks/useFileUpload";
-import { useFormStatus } from "react-dom";
 import { pdfjs } from 'react-pdf';
 import { chunkText, parseDocument } from "@/app/parser/documentParser";
-import { maxHeaderSize } from "http";
-import { useParsedDataStore } from "@/hooks/useParsedData";
+import { ParsedData, useParsedDataStore } from "@/hooks/useParsedData";
+import { useFieldSelectionStore } from "@/hooks/useFieldCheckbox";
 
 // Set up the worker (required by pdfjsLib)
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -24,11 +23,15 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 const SubmitButton = () => {
     const [loading, setLoading] = useState(false);
     const [text, setText] = useState('');
-    // const { pending } = useFormStatus()
 
-    const categoryName = useDocumentCategory(state => state.catgeory);
+    const category = useDocumentCategory(state => state.catgeory);
     const file = useFileUpload(state => state.file);
     const updateParsedData = useParsedDataStore(state => state.setParsedData);
+    const selectedFields = useFieldSelectionStore((state) => state.selectedFields);
+    const resetSelectedFields = useFieldSelectionStore((state) => state.resetFieldSelection);
+    const resetFile = useFileUpload(state => state.resetFile);
+    const resetCategory = useDocumentCategory(state => state.resetCategory);
+
 
     const extractText = async (fileUrl: string) => {
         const pdf = await pdfjs.getDocument(fileUrl).promise;
@@ -44,13 +47,18 @@ const SubmitButton = () => {
             }
         }
         const textChunks = chunkText(textContentString,2000); //Need to find out what the max chunk size should be
-
-        const parsedData = await parseDocument(textChunks);
+        console.log(selectedFields);
+        const parsedData = await parseDocument(textChunks,category, selectedFields ?? []);
+        console.log(parsedData);
         
-        updateParsedData(parsedData);
-        toast(JSON.stringify(parsedData ),{position: "bottom-right"});
+        updateParsedData(parsedData as ParsedData[]);
+        // toast(JSON.stringify(parsedData),{position: "bottom-right"});
         toast.success("Document parsed successfully!");
         setLoading(false);
+        resetCategory();
+        resetFile();
+        resetSelectedFields();
+        
           
 
 
@@ -64,8 +72,12 @@ const SubmitButton = () => {
         //     toast.error("Please wait for the previous document to finish parsing")
         //     return;
         // }
-        if (!categoryName) {
+        if (!category.name) {
             toast.error("Please select a category")
+            return;
+        }
+        if (!selectedFields || selectedFields.length === 0) {  
+            toast.error("Please select at least one field")
             return;
         }
         if (!file) {

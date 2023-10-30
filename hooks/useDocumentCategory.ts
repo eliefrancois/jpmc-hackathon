@@ -1,15 +1,16 @@
+import { Category } from 'llmparser';
 import { create } from 'zustand';
 
 interface DocumentCategoryStore {
-    catgeory: string;
-    updateCategory: (newCategory: string) => void;
+    catgeory: Category;
+    updateCategory: (newCategory: Category) => void;
     resetCategory: () => void;
 }
 
 const useDocumentCategory = create<DocumentCategoryStore>((set) => ({
-  catgeory: '',
-  updateCategory: (newCategory: string) => set(() => ({ catgeory: newCategory })),
-  resetCategory: () => set(() => ({ catgeory: '' })),
+  catgeory: {} as Category,
+  updateCategory: (newCategory: Category) => set(() => ({ catgeory: newCategory })),
+  resetCategory: () => set(() => ({ catgeory: {} as Category })),
 }));
 
 export default useDocumentCategory;
