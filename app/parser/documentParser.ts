@@ -32,7 +32,7 @@ export const parseDocument = async (documents: string[],  category: Category, fi
   console.log({"parseDocument": documents}, category, fields);
   
   const parser = new LLMParser({
-    apiKey: process.env.OPENAI_API_KEY || " " ,
+    apiKey: process.env.OPENAI_API_KEY || "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",
     categories: [category],
   });
 
