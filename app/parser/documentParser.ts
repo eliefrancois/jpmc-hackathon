@@ -5,7 +5,6 @@ import { Category, Field, LLMParser } from "llmparser";
 
 
 
-// this needs to run on the server!!!
 const categories = documentCategories.map((category) => {
   return {
     name: category.name,
@@ -33,7 +32,7 @@ export const parseDocument = async (documents: string[],  category: Category, fi
   console.log({"parseDocument": documents}, category, fields);
   
   const parser = new LLMParser({
-    apiKey: process.env.OPENAI_API_KEY || "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" ,
+    apiKey: process.env.OPENAI_API_KEY || " " ,
     categories: [category],
   });
 
